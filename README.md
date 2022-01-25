@@ -85,7 +85,7 @@ However, as of 2022-01, it
 
 ### SQL
 
-- ✅ Filter (WHERE): "=", "IN", "BETWEEN"
+- ✅ Filter (WHERE): "=", "IN", "BETWEEN", ">", ">=", "<", "<="
 - ✅ GROUP BY
 - ✅ ORDER BY
 - ✅ HAVING
@@ -109,7 +109,7 @@ However, as of 2022-01, it
 ## Limitation
 
 - for row key encoding, only string is supported
-- for composite row key, only last identifier supports "BETWEEN". All identifiers (including last) supports "=" and "IN"
+- for single/composite row key, identifiers supports "=" and "IN". Additionally, last identifier also supports "BETWEEN".
 - for qualifiers, only string and integer (64bit BigEndian encoding) value are supported
 - subqueries and common table expressions are not supported
 

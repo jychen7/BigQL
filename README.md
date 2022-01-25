@@ -21,36 +21,36 @@ us-west2#3698#2021-03-05-1203   96025       9.5         66          598
 us-west2#3698#2021-03-05-1204   96021       9.6         63          624
 ```
 
-we are able to calculate minimum/maximum pressure of the period by
-
-```
-client.query("""
-SELECT min(pressure), max(pressure) FROM weather_balloons
-WHERE
-  _row_key >= 'us-west2#3698#2021-03-05-1200'
-  AND _row_key <= 'us-west2#3698#2021-03-05-1204'
-""")
-```
-
-Or
-
-```
-client.query("""
-SELECT min(pressure), max(pressure) FROM weather_balloons
-WHERE
-  location = 'us-west2'
-  AND balloon_id = '3698'
-  AND datetime_minute >= '2021-03-05-1200'
-  AND datetime_minute <= '2021-03-05-1204'
-""")
-```
-
-with following setup
+we are able to calculate average pressure of the period by
 
 ```
 import bigtableql
-client = bigtableql.Client(config) # config follows offical python bigtable client
+# config follows offical python bigtable client
+client = bigtableql.Client(config)
 
+client.query("""
+SELECT avg(pressure) FROM weather_balloons
+WHERE
+  _row_key BETWEEN 'us-west2#3698#2021-03-05-1200' AND 'us-west2#3698#2021-03-05-1204'
+""")
+```
+
+Or with row key decomposition
+
+```
+client.query("""
+SELECT balloon_id, avg(pressure) FROM weather_balloons
+WHERE
+  location = 'us-west2'
+  AND balloon_id IN ('3698', '3700')
+  AND datetime_minute BETWEEN '2021-03-05-1200' AND '2021-03-05-1204'
+GROUP BY 1
+""")
+```
+
+using
+
+```
 client.register_table(
     "weather_balloons",
     instance_id="INSTANCE_ID",
@@ -70,7 +70,7 @@ client.register_table(
 )
 ```
 
-The output of `query` is [pyarrow.RecordBatch](https://arrow.apache.org/docs/python/generated/pyarrow.RecordBatch.html#pyarrow.RecordBatch.from_pydict). It can be easily convert to python dictionary (`to_pydict`) and pandas dataframe (`to_pandas`).
+The output of `query` is list of [pyarrow.RecordBatch](https://arrow.apache.org/docs/python/generated/pyarrow.RecordBatch.html#pyarrow.RecordBatch.from_pydict). It can be easily convert to python dictionary (`to_pydict`) and pandas dataframe (`to_pandas`).
 
 ## Alternative
 
@@ -85,16 +85,19 @@ However, as of 2022-01, it
 
 ### SQL
 
-- ✅ Filter (WHERE): "=", "IN", ">", ">=", "<", "<="
+- ✅ Filter (WHERE): "=", "IN", "BETWEEN"
 - ✅ GROUP BY
 - ✅ ORDER BY
 - ✅ HAVING
 - ✅ LIMIT
-- ✅ Aggregate
+- ✅ Aggregate (e.g. avg, sum, count)
+- ✅ AND
 - [ ] Alias
 - [ ] Cast
 - [ ] Common Math Functions
 - [ ] Common Date/Time Functions
+- [ ] OR ???
+- [ ] Join ???
 
 ### General
 
@@ -106,7 +109,7 @@ However, as of 2022-01, it
 ## Limitation
 
 - for row key encoding, only string is supported
-- for composite row key, only last identifier supports range (">", ">=", "<", "<="). All identifiers supports "=" and "IN"
+- for composite row key, only last identifier supports "BETWEEN". All identifiers (including last) supports "=" and "IN"
 - for qualifiers, only string and integer (64bit BigEndian encoding) value are supported
 - subqueries and common table expressions are not supported
 

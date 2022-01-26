@@ -1,0 +1,78 @@
+# simple row_key
+- sql: select age from users
+  parse_success:
+    - "users"
+    - ["age"]
+    - []
+    - {}
+  compose_error: "row_key partition: _row_key is required"
+- sql: select age from users where "_row_key" = "abc"
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key"]
+    - {"_row_key": ["abc"]}
+  compose_success:
+    - "abc"
+- sql: select age from users where "_row_key" = 'abc'
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key"]
+    - {"_row_key": ["abc"]}
+  compose_success:
+    - "abc"
+- sql: select age from users where "_row_key" = 'abc' and gender = 'M'
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key", "gender"]
+    - {"_row_key": ["abc"]}
+  compose_success:
+    - "abc"
+- sql: select age from users where "_row_key" in ('abc', 'def')
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key"]
+    - {"_row_key": ["abc", "def"]}
+  compose_success:
+    - "abc"
+    - "def"
+- sql: select age from users where "_row_key" between 'abc' and 'def'
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key"]
+    - {"_row_key": !!python/tuple ["abc", "def"]}
+  compose_success:
+    - !!python/tuple ["abc", "def"]
+- sql: select age from users where "_row_key" >= 'abc' and "_row_key" <= 'def'
+  parse_error: "selection (_row_key): only InList, Between and BinaryOp are supported"
+# composite row_keys
+- sql: select pressure from balloons where "device_id" = '3698' and event_minute = '2021-03-05-1200'
+  parse_success:
+    - "balloons"
+    - ["pressure"]
+    - ["device_id", "event_minute"]
+    - {"device_id": ["3698"], "event_minute": ["2021-03-05-1200"]}
+  compose_success:
+    - "3698#2021-03-05-1200"
+- sql: select pressure from balloons where "device_id" IN ('3698', '3700') and event_minute BETWEEN '2021-03-05-1200' and '2021-03-05-1204'
+  parse_success:
+    - "balloons"
+    - ["pressure"]
+    - ["device_id", "event_minute"]
+    - device_id: ["3698", "3700"]
+      event_minute: !!python/tuple ["2021-03-05-1200", "2021-03-05-1204"]
+  compose_success:
+    - !!python/tuple ["3698#2021-03-05-1200", "3698#2021-03-05-1204"]
+    - !!python/tuple ["3700#2021-03-05-1200", "3700#2021-03-05-1204"]
+- sql: select pressure from balloons where "device_id" BETWEEN '3698' AND '3700' and event_minute = '2021-03-05-1200'
+  parse_success:
+    - "balloons"
+    - ["pressure"]
+    - ["device_id", "event_minute"]
+    - device_id: !!python/tuple ["3698", "3700"]
+      event_minute: ["2021-03-05-1200"]
+  compose_error: "row_key partition: prefix device_id only support '=' and 'IN'"

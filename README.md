@@ -28,27 +28,30 @@ import bigtableql
 # config follows offical python bigtable client
 client = bigtableql.Client(config)
 
-client.query("""
+client.register_table(
+    "weather_balloons",
+    instance_id="INSTANCE_ID",
+    column_families={
+        "measurements": {
+            "only_read_latest": True,
+            "columns": {
+                "pressure": int,
+                "temperature": str,
+                "humidity": int,
+                "altitude": int
+            }
+        }
+    }
+)
+
+client.query("measurements", """
 SELECT avg(pressure) FROM weather_balloons
 WHERE
-  _row_key BETWEEN 'us-west2#3698#2021-03-05-1200' AND 'us-west2#3698#2021-03-05-1204'
+  "_row_key" BETWEEN 'us-west2#3698#2021-03-05-1200' AND 'us-west2#3698#2021-03-05-1204'
 """)
 ```
 
 Or with row key decomposition
-
-```
-client.query("""
-SELECT balloon_id, avg(pressure) FROM weather_balloons
-WHERE
-  location = 'us-west2'
-  AND balloon_id IN ('3698', '3700')
-  AND datetime_minute BETWEEN '2021-03-05-1200' AND '2021-03-05-1204'
-GROUP BY 1
-""")
-```
-
-using
 
 ```
 client.register_table(
@@ -65,9 +68,18 @@ client.register_table(
             }
         }
     },
-    row_key_identifiers=["location", "balloon_id", "datetime_minute"],
+    row_key_identifiers=["location", "balloon_id", "event_minute"],
     row_key_separator="#"
 )
+
+client.query("measurements", """
+SELECT balloon_id, avg(pressure) FROM weather_balloons
+WHERE
+  location = 'us-west2'
+  AND balloon_id IN ('3698', '3700')
+  AND event_minute BETWEEN '2021-03-05-1200' AND '2021-03-05-1204'
+GROUP BY 1
+""")
 ```
 
 The output of `query` is list of [pyarrow.RecordBatch](https://arrow.apache.org/docs/python/generated/pyarrow.RecordBatch.html#pyarrow.RecordBatch.from_pydict). It can be easily convert to python dictionary (`to_pydict`) and pandas dataframe (`to_pandas`).

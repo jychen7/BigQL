@@ -110,6 +110,7 @@ However, as of 2022-01, it
 - [ ] Common Date/Time Functions
 - [ ] OR ???
 - [ ] Join ???
+- [ ] Insert ???
 
 ### General
 

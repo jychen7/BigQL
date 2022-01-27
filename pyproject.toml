@@ -1,8 +1,18 @@
 [tool.poetry]
 name = "BigtableQL"
-version = "0.1.0"
+version = "0.1.1"
 description = "Query Layer for Google Cloud Bigtable"
 authors = ["jychen7 <jychen7@users.noreply.github.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/jychen7/BigtableQL"
+repository = "https://github.com/jychen7/BigtableQL"
+keywords = ["arrow", "bigtable", "datafusion", "sql"]
+classifiers = [
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+include = ["LICENSE"]
 
 [tool.poetry.dependencies]
 python = "^3.8"

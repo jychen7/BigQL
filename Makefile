@@ -4,6 +4,12 @@ install:
 test:
 	poetry run pytest tests
 
+build:
+	poetry build
+
+publish:
+	poetry publish
+
 fmt:
 	poetry run black .
 

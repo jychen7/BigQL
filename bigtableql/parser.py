@@ -1,6 +1,7 @@
 import sqloxide
 import functools
 from typing import Tuple
+from bigtableql import SELECT_STAR
 
 BINARY_OPERATION = "BinaryOp"
 FUNCTION_OPERATION = "Function"
@@ -38,7 +39,10 @@ def _parse_table_name(select_from) -> str:
     return select_from[0]["relation"]["Table"]["name"][0]["value"]
 
 
-def _parse_projection(select_projection) -> set:
+def _parse_projection(select_projection: list) -> set:
+    if SELECT_STAR in select_projection:
+        return {SELECT_STAR}
+
     projection = [
         [
             _parse_identifier_key(arg["Unnamed"])

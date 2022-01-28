@@ -2,7 +2,12 @@ from google.cloud import bigtable
 import pyarrow
 from typing import List
 from bigtableql import parser, composer, scanner, executor
-from bigtableql import RESERVED_ROWKEY, RESERVED_TIMESTAMP, DEFAULT_SEPARATOR
+from bigtableql import (
+    RESERVED_ROWKEY,
+    RESERVED_TIMESTAMP,
+    DEFAULT_SEPARATOR,
+    SELECT_STAR,
+)
 
 
 class Client:
@@ -52,13 +57,15 @@ class Client:
 
         row_key_identifiers = table_catalog["row_key_identifiers"]
         non_qualifiers = set(row_key_identifiers) | {RESERVED_TIMESTAMP}
-        qualifiers = (projection | selection) - non_qualifiers
+
+        columns = table_catalog["column_families"][column_family_id]["columns"].keys()
+        if SELECT_STAR in projection:
+            qualifiers = set(columns)
+        else:
+            qualifiers = (projection | selection) - non_qualifiers
 
         for qualifier in qualifiers:
-            if (
-                qualifier
-                not in table_catalog["column_families"][column_family_id]["columns"]
-            ):
+            if qualifier not in columns:
                 raise Exception(
                     f"table {table_name}, column_family {column_family_id}: {qualifier} not found"
                 )

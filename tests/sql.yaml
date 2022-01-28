@@ -22,6 +22,14 @@
     - {"_row_key": ["abc"]}
   compose_success:
     - "abc"
+- sql: select *, age from users where "_row_key" = 'abc'
+  parse_success:
+    - "users"
+    - ["Wildcard"]
+    - ["_row_key"]
+    - {"_row_key": ["abc"]}
+  compose_success:
+    - "abc"
 - sql: select age from users where "_row_key" = 'abc' and gender = 'M'
   parse_success:
     - "users"

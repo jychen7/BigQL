@@ -22,7 +22,4 @@ jobs:
           make build
       - name: Publish package
         run: |
-          make publish
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          poetry publish --username "__token__" --password "${{ secrets.PYPI_API_TOKEN }}"

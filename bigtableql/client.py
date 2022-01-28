@@ -2,7 +2,7 @@ from google.cloud import bigtable
 import pyarrow
 import sqloxide
 from typing import List
-from bigtableql import select_parser, composer, scanner, executor
+from bigtableql import select_parser, insert_parser, composer, scanner, executor, writer
 from bigtableql import (
     RESERVED_ROWKEY,
     RESERVED_TIMESTAMP,
@@ -44,9 +44,13 @@ class Client:
 
     def query(self, column_family_id: str, sql: str):
         parsed = sqloxide.parse_sql(sql=sql, dialect="ansi")[0]
-        return self._select(column_family_id, parsed["Query"]["body"]["Select"])
+        if "Insert" in parsed:
+            return self._insert(column_family_id, parsed["Insert"])
+        return self._select(column_family_id, parsed["Query"]["body"]["Select"], sql)
 
-    def _select(self, column_family_id: str, select) -> List[pyarrow.RecordBatch]:
+    def _select(
+        self, column_family_id: str, select, sql: str
+    ) -> List[pyarrow.RecordBatch]:
         (
             table_name,
             projection,
@@ -87,3 +91,37 @@ class Client:
             non_qualifiers,
         )
         return executor.execute(table_name, record_batch, sql)
+
+    def _insert(self, column_family_id: str, insert):
+        table_name, keys, values_batch = insert_parser.parse(insert)
+
+        if table_name not in self.catalog:
+            raise Exception(
+                f"catalog: {table_name} not found, please register_table first"
+            )
+        table_catalog = self.catalog[table_name]
+
+        if column_family_id not in table_catalog["column_families"]:
+            raise Exception(
+                f"table {table_name}: column_family {column_family_id} not found"
+            )
+
+        row_key_identifiers = table_catalog["row_key_identifiers"]
+        columns = table_catalog["column_families"][column_family_id]["columns"].keys()
+        unregisterd_keys = set(keys) - (set(row_key_identifiers) | set(columns))
+        if unregisterd_keys:
+            raise Exception(f"insert: {unregisterd_keys} not registered")
+        missing_identifiers = set(row_key_identifiers) - set(keys)
+        if missing_identifiers:
+            raise Exception(f"insert: {missing_identifiers} required")
+
+        n = len(keys)
+        for values in values_batch:
+            if len(values) != n:
+                raise Exception(
+                    f"insert: {values} is invalid, should have {n} elements"
+                )
+
+        return writer.write(
+            self.bigtable_client, table_catalog, column_family_id, keys, values_batch
+        )

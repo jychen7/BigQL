@@ -97,6 +97,9 @@ However, as of 2022-01, it
 
 ### SQL
 
+- ✅ Insert Into
+- ✅ Select *
+- ✅ Select column(s)
 - ✅ Filter (WHERE): "=", "IN", "BETWEEN", ">", ">=", "<", "<="
 - ✅ GROUP BY
 - ✅ ORDER BY
@@ -110,7 +113,6 @@ However, as of 2022-01, it
 - [ ] Common Date/Time Functions
 - [ ] OR ???
 - [ ] Join ???
-- [ ] Insert ???
 
 ### General
 

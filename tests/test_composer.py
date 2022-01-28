@@ -4,7 +4,7 @@ import pytest
 
 
 def test_composer(catalog):
-    with open("tests/sql.yaml", "r") as stream:
+    with open("tests/select_sql.yaml", "r") as stream:
         test_cases = yaml.load(stream, yaml.FullLoader)
     for test in test_cases:
         if "parse_success" in test:

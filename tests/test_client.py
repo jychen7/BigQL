@@ -15,7 +15,7 @@ def test_register_table(anonymous_client, catalog):
     assert anonymous_client.catalog["users"] == catalog["users"]
 
 
-def test_query_no_table(anonymous_client, catalog):
+def test_select_no_table(anonymous_client, catalog):
     anonymous_client.catalog = catalog
     with pytest.raises(Exception) as e:
         anonymous_client.query(
@@ -24,7 +24,7 @@ def test_query_no_table(anonymous_client, catalog):
     assert str(e.value) == "catalog: customers not found, please register_table first"
 
 
-def test_query_no_column_family(anonymous_client, catalog):
+def test_select_no_column_family(anonymous_client, catalog):
     anonymous_client.catalog = catalog
     with pytest.raises(Exception) as e:
         anonymous_client.query(
@@ -33,7 +33,7 @@ def test_query_no_column_family(anonymous_client, catalog):
     assert str(e.value) == "table users: column_family friends not found"
 
 
-def test_query_no_column(anonymous_client, catalog):
+def test_select_no_column(anonymous_client, catalog):
     anonymous_client.catalog = catalog
     with pytest.raises(Exception) as e:
         anonymous_client.query(

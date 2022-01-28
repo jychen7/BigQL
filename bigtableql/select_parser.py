@@ -1,4 +1,3 @@
-import sqloxide
 import functools
 from typing import Tuple
 from bigtableql import SELECT_STAR
@@ -12,10 +11,7 @@ IN_OPERATOR = "InList"
 BETWEEN_OPERATOR = "Between"
 
 
-def parse(sql: str, catalog: dict) -> Tuple[str, set, set, dict]:
-    parsed = sqloxide.parse_sql(sql=sql, dialect="ansi")
-
-    select = parsed[0]["Query"]["body"]["Select"]
+def parse(select, catalog: dict) -> Tuple[str, set, set, dict]:
     table_name = _parse_table_name(select["from"])
 
     if table_name not in catalog:
@@ -103,14 +99,19 @@ def _parse_identifier_mapping(row_key_identifiers, select_selection) -> dict:
     if IN_OPERATOR in select_selection:
         identifier = _parse_identifier_key(select_selection[IN_OPERATOR]["expr"])
         values = [
-            _parse_identifier_value(identifier, v) for v in select_selection[IN_OPERATOR]["list"]
+            _parse_identifier_value(identifier, v)
+            for v in select_selection[IN_OPERATOR]["list"]
         ]
         return {identifier: values}
 
     if BETWEEN_OPERATOR in select_selection:
         identifier = _parse_identifier_key(select_selection[BETWEEN_OPERATOR]["expr"])
-        low = _parse_identifier_value(identifier, select_selection[BETWEEN_OPERATOR]["low"])
-        high = _parse_identifier_value(identifier, select_selection[BETWEEN_OPERATOR]["high"])
+        low = _parse_identifier_value(
+            identifier, select_selection[BETWEEN_OPERATOR]["low"]
+        )
+        high = _parse_identifier_value(
+            identifier, select_selection[BETWEEN_OPERATOR]["high"]
+        )
         return {identifier: (low, high)}
 
     if BINARY_OPERATION not in select_selection:

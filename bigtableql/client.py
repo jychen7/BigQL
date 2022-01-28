@@ -1,7 +1,8 @@
 from google.cloud import bigtable
 import pyarrow
+import sqloxide
 from typing import List
-from bigtableql import parser, composer, scanner, executor
+from bigtableql import select_parser, composer, scanner, executor
 from bigtableql import (
     RESERVED_ROWKEY,
     RESERVED_TIMESTAMP,
@@ -41,10 +42,17 @@ class Client:
             "row_key_separator": row_key_separator,
         }
 
-    def query(self, column_family_id: str, sql: str) -> List[pyarrow.RecordBatch]:
-        table_name, projection, selection, row_key_identifiers_mapping = parser.parse(
-            sql, self.catalog
-        )
+    def query(self, column_family_id: str, sql: str):
+        parsed = sqloxide.parse_sql(sql=sql, dialect="ansi")[0]
+        return self._select(column_family_id, parsed["Query"]["body"]["Select"])
+
+    def _select(self, column_family_id: str, select) -> List[pyarrow.RecordBatch]:
+        (
+            table_name,
+            projection,
+            selection,
+            row_key_identifiers_mapping,
+        ) = select_parser.parse(select, self.catalog)
         row_set = composer.compose(
             self.catalog[table_name], row_key_identifiers_mapping
         )

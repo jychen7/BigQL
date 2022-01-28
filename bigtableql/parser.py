@@ -87,27 +87,30 @@ def _parse_identifier_key(left):
     return left["Identifier"]["value"]
 
 
-def _parse_identifier_value(right):
+def _parse_identifier_value(identifier, right):
     if "Identifier" in right:
         # {'Identifier': {'value': 'a', 'quote_style': '"'}}
         return right["Identifier"]["value"]
 
     # {'Value': {'SingleQuotedString': '20220116'}}
-    return right.get("Value", {}).get("SingleQuotedString", {})
+    value = right.get("Value", {}).get("SingleQuotedString")
+    if not value:
+        raise Exception(f"selection ({identifier}): only support string value")
+    return value
 
 
 def _parse_identifier_mapping(row_key_identifiers, select_selection) -> dict:
     if IN_OPERATOR in select_selection:
         identifier = _parse_identifier_key(select_selection[IN_OPERATOR]["expr"])
         values = [
-            _parse_identifier_value(v) for v in select_selection[IN_OPERATOR]["list"]
+            _parse_identifier_value(identifier, v) for v in select_selection[IN_OPERATOR]["list"]
         ]
         return {identifier: values}
 
     if BETWEEN_OPERATOR in select_selection:
         identifier = _parse_identifier_key(select_selection[BETWEEN_OPERATOR]["expr"])
-        low = _parse_identifier_value(select_selection[BETWEEN_OPERATOR]["low"])
-        high = _parse_identifier_value(select_selection[BETWEEN_OPERATOR]["high"])
+        low = _parse_identifier_value(identifier, select_selection[BETWEEN_OPERATOR]["low"])
+        high = _parse_identifier_value(identifier, select_selection[BETWEEN_OPERATOR]["high"])
         return {identifier: (low, high)}
 
     if BINARY_OPERATION not in select_selection:
@@ -129,7 +132,7 @@ def _parse_identifier_mapping(row_key_identifiers, select_selection) -> dict:
         return {}
 
     if op == EQUAL_OPERATOR:
-        value = _parse_identifier_value(right)
+        value = _parse_identifier_value(identifier, right)
         return {identifier: [value]}
     else:
         raise Exception(

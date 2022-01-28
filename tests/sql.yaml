@@ -22,6 +22,8 @@
     - {"_row_key": ["abc"]}
   compose_success:
     - "abc"
+- sql: select age from users where "_row_key" = 1
+  parse_error: "selection (_row_key): only support string value"
 - sql: select *, age from users where "_row_key" = 'abc'
   parse_success:
     - "users"

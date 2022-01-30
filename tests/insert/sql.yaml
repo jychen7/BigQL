@@ -1,0 +1,26 @@
+- sql: insert into users ("gender", "age") values ("unknown", "10")
+  parse_success:
+    - users
+    - ["gender", "age"]
+    - [["unknown", "10"]]
+- sql: insert into users ("gender", "age") values ('unknown', '10')
+  parse_success:
+    - users
+    - ["gender", "age"]
+    - [["unknown", "10"]]
+# int 10 will be parsed to string, later encoding with 64 int when write
+- sql: insert into users ("gender", "age") values ('unknown', 10)
+  parse_success:
+    - users
+    - ["gender", "age"]
+    - [["unknown", "10"]]
+- sql: insert into users ("gender", "age") values ('M', '10'),('F', '10')
+  parse_success:
+    - users
+    - ["gender", "age"]
+    - [["M", "10"], ["F", "10"]]
+- sql: insert into users ("gender") values ('M', '10'),('F', '10')
+  parse_success:
+    - users
+    - ["gender"]
+    - [["M", "10"], ["F", "10"]]

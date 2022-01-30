@@ -1,6 +1,7 @@
 import functools
 from typing import Tuple
 from bigtableql import SELECT_STAR
+from bigtableql.select import validator
 
 BINARY_OPERATION = "BinaryOp"
 FUNCTION_OPERATION = "Function"
@@ -14,8 +15,7 @@ BETWEEN_OPERATOR = "Between"
 def parse(select, catalog: dict) -> Tuple[str, set, set, dict]:
     table_name = _parse_table_name(select["from"])
 
-    if table_name not in catalog:
-        raise Exception(f"catalog: {table_name} not found, please register_table first")
+    validator.validate_table_name(catalog, table_name)
     table_catalog = catalog[table_name]
 
     projection = _parse_projection(select["projection"])

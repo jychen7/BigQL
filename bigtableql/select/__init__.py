@@ -1,5 +1,5 @@
 from bigtableql import RESERVED_TIMESTAMP, SELECT_STAR
-from bigtableql.select import parser, composer, scanner, executor
+from bigtableql.select import parser, validator, composer, scanner, executor
 from typing import List
 import pyarrow
 
@@ -26,33 +26,22 @@ class SelectQuery:
             selection,
             row_key_identifiers_mapping,
         ) = parser.parse(self.select, self.catalog)
-        row_set = composer.compose(
-            self.catalog[table_name], row_key_identifiers_mapping
+
+        # parser have check validate_table_name
+        table_catalog = self.catalog[table_name]
+        validator.validate_column_family(
+            table_name, table_catalog, self.column_family_id
         )
 
-        table_catalog = self.catalog[table_name]
-        if self.column_family_id not in table_catalog["column_families"]:
-            raise Exception(
-                f"table {table_name}: column_family {self.column_family_id} not found"
-            )
+        qualifiers, non_qualifiers = self._split_qualifiers(
+            table_catalog, projection, selection
+        )
 
-        row_key_identifiers = table_catalog["row_key_identifiers"]
-        non_qualifiers = set(row_key_identifiers) | {RESERVED_TIMESTAMP}
+        validator.validate_columns(
+            table_name, table_catalog, self.column_family_id, qualifiers
+        )
 
-        columns = table_catalog["column_families"][self.column_family_id][
-            "columns"
-        ].keys()
-        if SELECT_STAR in projection:
-            qualifiers = set(columns)
-        else:
-            qualifiers = (projection | selection) - non_qualifiers
-
-        for qualifier in qualifiers:
-            if qualifier not in columns:
-                raise Exception(
-                    f"table {table_name}, column_family {self.column_family_id}: {qualifier} not found"
-                )
-
+        row_set = composer.compose(table_catalog, row_key_identifiers_mapping)
         record_batch = scanner.scan(
             self.bigtable_client,
             table_catalog,
@@ -61,4 +50,18 @@ class SelectQuery:
             qualifiers,
             non_qualifiers,
         )
-        return executor.execute(table_name, record_batch, sql)
+        return executor.execute(table_name, record_batch, self.sql)
+
+    def _split_qualifiers(self, table_catalog, projection, selection):
+        non_qualifiers = set(table_catalog["row_key_identifiers"]) | {
+            RESERVED_TIMESTAMP
+        }
+        if SELECT_STAR in projection:
+            qualifiers = set(
+                table_catalog["column_families"][self.column_family_id][
+                    "columns"
+                ].keys()
+            )
+        else:
+            qualifiers = (projection | selection) - non_qualifiers
+        return qualifiers, non_qualifiers

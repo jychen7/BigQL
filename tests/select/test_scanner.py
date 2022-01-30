@@ -1,4 +1,4 @@
-from bigtableql import scanner
+from bigtableql.select import scanner
 import struct
 from google.cloud.bigtable.row_data import PartialRowData, Cell
 from datetime import datetime

@@ -1,12 +1,12 @@
 import struct, itertools
-from bigtableql import scanner
-from typing import List
+from bigtableql.select import scanner
+from typing import List, Tuple
 from google.rpc.status_pb2 import Status
 
 
 def write(
     bigtable_client, table_catalog, column_family_id, keys, values_batch
-) -> List[Status]:
+) -> List[Tuple[bool, Status]]:
     # keys = ["a", "b"]
     # values_batch = [[1,2], [3,4]]
     # => [{'a': 1, 'b': 2}, {'a': 3, 'b': 4}]
@@ -41,7 +41,8 @@ def write(
             )
         rows.append(row)
 
-    return bigtable_table.mutate_rows(rows)
+    statues = bigtable_table.mutate_rows(rows)
+    return [(s.code == 0, s) for s in statues]
 
 
 def _encode_value(value, is_int):

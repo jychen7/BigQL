@@ -15,11 +15,14 @@ classifiers = [
 include = ["LICENSE"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.7,<3.10"
 sqloxide = "0.1.13"
 google-cloud-bigtable = "2.4.0"
 pyarrow = "6.0.1"
 datafusion = "0.4.0"
+# specify numpy 1.21.5 for python 3.7
+# as of 2022-01, latest numpy 1.22.1 only supports python >=3.8
+numpy = "1.21.5"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

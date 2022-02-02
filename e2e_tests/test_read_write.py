@@ -41,29 +41,32 @@ def test_read_after_write():
         },
     )
 
+    # write
     responses = client.query(
         "measurements",
         """
         INSERT INTO weather_balloons
         ("_row_key", "pressure", "temperature")
         values
-        ("us-west2#3698#2021-03-05-1200", 94558, "9.6"),
-        ("us-west2#3698#2021-03-05-1201", 94122, "9.7")
+        ("us-west2#3698#2021-03-05-1200", 94558, "76"),
+        ("us-west2#3698#2021-03-05-1201", 94122, "78")
     """,
     )
     assert responses[0][0]
     assert responses[1][0]
 
+    # read via row_key
     record_batchs = client.query(
         "measurements",
         """
-        SELECT avg(pressure) FROM weather_balloons
+        SELECT avg(pressure) as avg_pressure FROM weather_balloons
         WHERE
         "_row_key" BETWEEN 'us-west2#3698#2021-03-05-1200' AND 'us-west2#3698#2021-03-05-1204'
     """,
     )
-    assert record_batchs[0].to_pydict() == {"AVG(weather_balloons.pressure)": [94340.0]}
+    assert record_batchs[0].to_pydict() == {"avg_pressure": [94340.0]}
 
+    # read via composite key
     client.register_table(
         table_name,
         instance_id=instance_id,
@@ -84,11 +87,11 @@ def test_read_after_write():
     record_batchs = client.query(
         "measurements",
         """
-        SELECT avg(pressure) FROM weather_balloons
-WHERE
-  location = 'us-west2'
-  AND balloon_id = '3698'
-  AND event_minute BETWEEN '2021-03-05-1200' AND '2021-03-05-1204'
-    """,
+        SELECT avg(cast(temperature as int)) as avg_temperature FROM weather_balloons
+        WHERE
+          location = 'us-west2'
+          AND balloon_id = '3698'
+          AND event_minute BETWEEN '2021-03-05-1200' AND '2021-03-05-1204'
+            """,
     )
-    assert record_batchs[0].to_pydict() == {"AVG(weather_balloons.pressure)": [94340.0]}
+    assert record_batchs[0].to_pydict() == {"avg_temperature": [77]}

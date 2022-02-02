@@ -39,20 +39,15 @@ def _parse_projection(select_projection: list) -> set:
     if SELECT_STAR in select_projection:
         return {SELECT_STAR}
 
-    projection = [
-        [
-            _parse_identifier_key(arg["Unnamed"])
-            for arg in expr["UnnamedExpr"][FUNCTION_OPERATION]["args"]
-        ]
-        if FUNCTION_OPERATION in expr["UnnamedExpr"]
-        else _parse_identifier_key(expr["UnnamedExpr"])
-        for expr in select_projection
-    ]
-    return functools.reduce(
-        lambda sum, x: sum | set(x) if isinstance(x, list) else sum | set([x]),
-        projection,
-        set(),
-    )
+    projection = []
+    for expr in select_projection:
+        if "ExprWithAlias" in expr:
+            projection.append(_parse_identifier_key(expr["ExprWithAlias"]["expr"]))
+            continue
+
+        projection.append(_parse_identifier_key(expr["UnnamedExpr"]))
+
+    return set(projection)
 
 
 def _parse_selection(select_selection) -> set:
@@ -79,17 +74,30 @@ def _parse_selection(select_selection) -> set:
     return {identifier}
 
 
-def _parse_identifier_key(left):
-    return left["Identifier"]["value"]
+def _parse_identifier_key(expr):
+    if FUNCTION_OPERATION in expr:
+        expr = expr[FUNCTION_OPERATION]["args"][0]["Unnamed"]
+
+    if "Cast" in expr:
+        expr = expr["Cast"]["expr"]
+
+    if "Identifier" in expr:
+        return expr["Identifier"]["value"]
+
+    if BINARY_OPERATION in expr:
+        return _parse_identifier_key(
+            expr[BINARY_OPERATION]["left"]
+        ) or _parse_identifier_key(expr[BINARY_OPERATION]["right"])
+    return None
 
 
-def _parse_identifier_value(identifier, right):
-    if "Identifier" in right:
+def _parse_identifier_value(identifier, expr):
+    if "Identifier" in expr:
         # {'Identifier': {'value': 'a', 'quote_style': '"'}}
-        return right["Identifier"]["value"]
+        return expr["Identifier"]["value"]
 
     # {'Value': {'SingleQuotedString': '20220116'}}
-    value = right.get("Value", {}).get("SingleQuotedString")
+    value = expr.get("Value", {}).get("SingleQuotedString")
     if not value:
         raise Exception(f"selection ({identifier}): only support string value")
     return value

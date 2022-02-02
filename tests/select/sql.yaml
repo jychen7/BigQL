@@ -86,3 +86,68 @@
     - device_id: !!python/tuple ["3698", "3700"]
       event_minute: ["2021-03-05-1200"]
   compose_error: "row_key partition: prefix device_id only support '=' and 'IN'"
+# functions
+- sql: select avg(age) from users where "_row_key" between 'abc' and 'def'
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key"]
+    - {"_row_key": !!python/tuple ["abc", "def"]}
+  compose_success:
+    - !!python/tuple ["abc", "def"]
+- sql: select age as year from users where "_row_key" between 'abc' and 'def'
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key"]
+    - {"_row_key": !!python/tuple ["abc", "def"]}
+  compose_success:
+    - !!python/tuple ["abc", "def"]
+- sql: select avg(age) as avg_age from users where "_row_key" between 'abc' and 'def'
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key"]
+    - {"_row_key": !!python/tuple ["abc", "def"]}
+  compose_success:
+    - !!python/tuple ["abc", "def"]
+- sql: select age + 1 from users where "_row_key" between 'abc' and 'def'
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key"]
+    - {"_row_key": !!python/tuple ["abc", "def"]}
+  compose_success:
+    - !!python/tuple ["abc", "def"]
+- sql: select 1 + age from users where "_row_key" between 'abc' and 'def'
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key"]
+    - {"_row_key": !!python/tuple ["abc", "def"]}
+  compose_success:
+    - !!python/tuple ["abc", "def"]
+- sql: select age + 1 as age_plus from users where "_row_key" between 'abc' and 'def'
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key"]
+    - {"_row_key": !!python/tuple ["abc", "def"]}
+  compose_success:
+    - !!python/tuple ["abc", "def"]
+- sql: select cast(age as int) from users where "_row_key" between 'abc' and 'def'
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key"]
+    - {"_row_key": !!python/tuple ["abc", "def"]}
+  compose_success:
+    - !!python/tuple ["abc", "def"]
+- sql: select avg(cast(age as int)) as avg_age from users where "_row_key" between 'abc' and 'def'
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key"]
+    - {"_row_key": !!python/tuple ["abc", "def"]}
+  compose_success:
+    - !!python/tuple ["abc", "def"]

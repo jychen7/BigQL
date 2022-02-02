@@ -24,9 +24,9 @@ us-west2#3698#2021-03-05-1204   96021       9.6         63          624
 we are able to calculate average pressure of the period by
 
 ```
-import bigtableql
+from bigtableql.client import Client
 # config follows offical python bigtable client
-client = bigtableql.Client(config)
+client = Client(config)
 
 client.register_table(
     "weather_balloons",
@@ -107,9 +107,9 @@ However, as of 2022-01, it
 - ✅ LIMIT
 - ✅ Aggregate (e.g. avg, sum, count)
 - ✅ AND
-- [ ] Alias
-- [ ] Cast
-- [ ] Common Math Functions
+- ✅ Alias
+- ✅ Cast
+- ✅ Common Math Functions
 - [ ] Common Date/Time Functions
 - [ ] OR ???
 - [ ] Join ???
@@ -119,7 +119,7 @@ However, as of 2022-01, it
 - ✅ Partition Pruning
 - ✅ Projection pushdown
 - [ ] Predicate push down (only [Value range](https://cloud.google.com/bigtable/docs/using-filters#value-range) is possible)
-- [ ] Limit Pushdown
+- [ ] Limit Pushdown ???
 
 ## Limitation
 

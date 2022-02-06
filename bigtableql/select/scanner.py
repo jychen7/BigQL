@@ -75,7 +75,7 @@ def _process_row(
             if i == 0:
                 for j, composite_row_key in enumerate(row_key_identifiers):
                     columnar[composite_row_key].append(row_key_values[j])
-                columnar[RESERVED_TIMESTAMP].append(str(cell.timestamp))
+                columnar[RESERVED_TIMESTAMP].append(cell.timestamp.timestamp())
 
 
 def _int_qualifiers(qualifiers: set, columns_map: dict) -> set:

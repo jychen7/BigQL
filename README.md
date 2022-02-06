@@ -84,6 +84,14 @@ GROUP BY 1
 
 The output of `query` is list of [pyarrow.RecordBatch](https://arrow.apache.org/docs/python/generated/pyarrow.RecordBatch.html#pyarrow.RecordBatch.from_pydict). It can be easily convert to python dictionary (`to_pydict`) and pandas dataframe (`to_pandas`).
 
+### Group by Time
+
+Each cell in Bigtable have a timestamp. `SELECT "_timestamp"` will return a float number, represent seconds since Unix epoch. Following is an example to select 5 minutes interval
+
+```
+SELECT to_timestamp_seconds(cast(floor("_timestamp" / 600) * 600 as bigint)) as interval
+```
+
 ## Alternative
 
 1. [Google BigQuery external data source](https://cloud.google.com/bigquery/external-data-bigtable)

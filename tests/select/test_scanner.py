@@ -16,7 +16,7 @@ def test_process_row_simple_key_single_qualifier_single_cell():
         columnar, row_data, ["_row_key"], "#", "profile", set(["age"]), set(["age"])
     )
     assert columnar["_row_key"] == ["abc#def"]
-    assert columnar["_timestamp"] == ["2022-01-01 05:00:00+00:00"]
+    assert columnar["_timestamp"] == [1641013200.0]
     assert columnar["age"] == [20]
 
 
@@ -33,8 +33,8 @@ def test_process_row_simple_key_single_qualifier_multiple_cells():
     )
     assert columnar["_row_key"] == ["abc", "abc"]
     assert columnar["_timestamp"] == [
-        "2022-01-01 05:00:00+00:00",
-        "2022-01-01 04:58:20+00:00",
+        1641013200.0,
+        1641013100.0,
     ]
     assert columnar["age"] == [20, 10]
 
@@ -59,7 +59,7 @@ def test_process_row_simple_key_multiple_qualifiers_single_cell():
         set(["age"]),
     )
     assert columnar["_row_key"] == ["abc"]
-    assert columnar["_timestamp"] == ["2022-01-01 05:00:00+00:00"]
+    assert columnar["_timestamp"] == [1641013200.0]
     assert columnar["age"] == [20]
     assert columnar["gender"] == ["M"]
 
@@ -87,8 +87,8 @@ def test_process_row_simple_key_multiple_qualifiers_multiple_cells():
     )
     assert columnar["_row_key"] == ["abc", "abc"]
     assert columnar["_timestamp"] == [
-        "2022-01-01 05:00:00+00:00",
-        "2022-01-01 04:58:20+00:00",
+        1641013200.0,
+        1641013100.0,
     ]
     assert columnar["age"] == [20, 10]
     assert columnar["gender"] == ["M", "M"]
@@ -124,8 +124,8 @@ def test_process_row_composite_key():
     assert columnar["device_id"] == ["3698", "3698"]
     assert columnar["event_minute"] == ["2022-01-01-0500", "2022-01-01-0500"]
     assert columnar["_timestamp"] == [
-        "2022-01-01 05:00:00+00:00",
-        "2022-01-01 04:58:20+00:00",
+        1641013200.0,
+        1641013100.0,
     ]
     assert columnar["temperature"] == ["37.1", "36.9"]
     assert columnar["pressure"] == [94558, 94122]

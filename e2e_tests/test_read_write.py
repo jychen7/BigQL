@@ -18,6 +18,7 @@ def test_read_after_write():
     _prepare_table(bigtable_table)
     _prepare_column_family(bigtable_table)
     _registry_table_simple(client)
+    _test_read_empty(client)
 
     _test_write(client)
     _test_read_simple(client)
@@ -92,6 +93,19 @@ def _test_write(client):
     )
     assert responses[0][0]
     assert responses[1][0]
+
+
+def _test_read_empty(client):
+    record_batchs = client.query(
+        "measurements",
+        """
+        SELECT avg(pressure) as avg_pressure FROM weather_balloons
+        WHERE
+        "_row_key" BETWEEN 'us-west2#3698#2021-03-05-1200' AND 'us-west2#3698#2021-03-05-1204'
+    """,
+    )
+    assert len(record_batchs) == 1
+    assert record_batchs[0].num_rows == 0
 
 
 def _test_read_simple(client):

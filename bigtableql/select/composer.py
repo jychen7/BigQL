@@ -28,13 +28,13 @@ def compose(table_catalog: dict, row_key_identifiers_mapping: dict) -> RowSet:
     identifier = row_key_identifiers[-1]
     last_row_range = row_key_identifiers_mapping[identifier]
     if isinstance(last_row_range, tuple):
-        start_key, end_key = last_row_range
+        start_key, end_key, start_inclusive, end_inclusive = last_row_range
         for prefix in prefixes:
             row_set.add_row_range_from_keys(
                 start_key=f"{prefix}{start_key}".encode(),
-                start_inclusive=True,
+                start_inclusive=start_inclusive,
                 end_key=f"{prefix}{end_key}".encode(),
-                end_inclusive=True,
+                end_inclusive=end_inclusive,
             )
     elif isinstance(last_row_range, list):
         for row_key in map(

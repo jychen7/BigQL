@@ -6,6 +6,7 @@ from google.cloud.bigtable.row_filters import (
     FamilyNameRegexFilter,
     CellsColumnLimitFilter,
     ColumnQualifierRegexFilter,
+    ValueRangeFilter,
 )
 from bigtableql import RESERVED_TIMESTAMP
 

@@ -8,6 +8,11 @@ FUNCTION_OPERATION = "Function"
 
 AND_OPERATOR = "And"
 EQUAL_OPERATOR = "Eq"
+GREATER_THAN_OPERATOR = "Gt"
+LESS_THAN_OPERATOR = "Lt"
+GREATER_OR_EQUAL_OPERATOR = "GtEq"
+LESS_OR_EQUAL_OPERATOR = "LtEq"
+
 IN_OPERATOR = "InList"
 BETWEEN_OPERATOR = "Between"
 
@@ -21,14 +26,14 @@ def parse(select, catalog: dict) -> Tuple[str, set, set, dict]:
     projection = _parse_projection(select["projection"])
     if select["selection"]:
         selection = _parse_selection(select["selection"])
-        row_key_identifiers_mapping = _parse_identifier_mapping(
+        identifiers_mapping = _parse_identifier_mapping(
             table_catalog["row_key_identifiers"], select["selection"]
         )
     else:
         selection = set()
-        row_key_identifiers_mapping = {}
+        identifiers_mapping = {}
 
-    return table_name, projection, selection, row_key_identifiers_mapping
+    return table_name, projection, selection, identifiers_mapping
 
 
 def _parse_table_name(select_from) -> str:
@@ -91,23 +96,38 @@ def _parse_identifier_key(expr):
     return None
 
 
-def _parse_identifier_value(identifier, expr):
+def _parse_identifier_value(row_key_identifiers, identifier, expr):
     if "Identifier" in expr:
         # {'Identifier': {'value': 'a', 'quote_style': '"'}}
         return expr["Identifier"]["value"]
 
     # {'Value': {'SingleQuotedString': '20220116'}}
-    value = expr.get("Value", {}).get("SingleQuotedString")
+    # {'Value': {'Number': ('1', False)}}
+    # {'Value': {'Number': ('1.1', False)}}
+    value = expr.get("Value", {})
     if not value:
-        raise Exception(f"selection ({identifier}): only support string value")
-    return value
+        raise Exception(f"selection ({identifier}): unable to parse value")
+
+    if "SingleQuotedString" in value:
+        return value["SingleQuotedString"]
+
+    if identifier in row_key_identifiers:
+        raise Exception(
+            f"selection ({identifier}): row identifier only support string value"
+        )
+
+    number = value["Number"][0]
+    try:
+        return int(number)
+    except:
+        return float(number)
 
 
 def _parse_identifier_mapping(row_key_identifiers, select_selection) -> dict:
     if IN_OPERATOR in select_selection:
         identifier = _parse_identifier_key(select_selection[IN_OPERATOR]["expr"])
         values = [
-            _parse_identifier_value(identifier, v)
+            _parse_identifier_value(row_key_identifiers, identifier, v)
             for v in select_selection[IN_OPERATOR]["list"]
         ]
         return {identifier: values}
@@ -115,12 +135,12 @@ def _parse_identifier_mapping(row_key_identifiers, select_selection) -> dict:
     if BETWEEN_OPERATOR in select_selection:
         identifier = _parse_identifier_key(select_selection[BETWEEN_OPERATOR]["expr"])
         low = _parse_identifier_value(
-            identifier, select_selection[BETWEEN_OPERATOR]["low"]
+            row_key_identifiers, identifier, select_selection[BETWEEN_OPERATOR]["low"]
         )
         high = _parse_identifier_value(
-            identifier, select_selection[BETWEEN_OPERATOR]["high"]
+            row_key_identifiers, identifier, select_selection[BETWEEN_OPERATOR]["high"]
         )
-        return {identifier: (low, high)}
+        return {identifier: (low, high, True, True)}
 
     if BINARY_OPERATION not in select_selection:
         raise Exception(
@@ -137,16 +157,25 @@ def _parse_identifier_mapping(row_key_identifiers, select_selection) -> dict:
         )
 
     identifier = _parse_identifier_key(left)
-    if identifier not in row_key_identifiers:
-        return {}
-
     if op == EQUAL_OPERATOR:
-        value = _parse_identifier_value(identifier, right)
+        value = _parse_identifier_value(row_key_identifiers, identifier, right)
         return {identifier: [value]}
-    else:
+    elif identifier in row_key_identifiers:
         raise Exception(
             f"selection ({identifier}): only {IN_OPERATOR}, {BETWEEN_OPERATOR} and {BINARY_OPERATION} are supported"
         )
+
+    value = _parse_identifier_value(row_key_identifiers, identifier, right)
+    if op == GREATER_OR_EQUAL_OPERATOR:
+        return {identifier: (value, None, True, False)}
+    elif op == GREATER_THAN_OPERATOR:
+        return {identifier: (value, None, False, False)}
+    elif op == LESS_OR_EQUAL_OPERATOR:
+        return {identifier: (None, value, False, True)}
+    elif op == LESS_THAN_OPERATOR:
+        return {identifier: (None, value, False, False)}
+    else:
+        raise Exception(f"selection ({identifier}): {op} not supported")
 
 
 def _merge_no_duplicate(identifier_map1, identifier_map2):

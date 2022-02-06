@@ -20,7 +20,12 @@ def test_composer(catalog):
                 output = test["compose_success"]
                 if isinstance(output[0], tuple):
                     assert [
-                        (r.start_key.decode(), r.end_key.decode())
+                        (
+                            r.start_key.decode(),
+                            r.end_key.decode(),
+                            r.start_inclusive,
+                            r.end_inclusive,
+                        )
                         for r in row_set.row_ranges
                     ] == output
                 else:

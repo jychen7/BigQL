@@ -24,7 +24,7 @@ class SelectQuery:
             table_name,
             projection,
             selection,
-            row_key_identifiers_mapping,
+            identifiers_mapping,
         ) = parser.parse(self.select, self.catalog)
 
         # parser have check validate_table_name
@@ -41,7 +41,7 @@ class SelectQuery:
             table_name, table_catalog, self.column_family_id, qualifiers
         )
 
-        row_set = composer.compose(table_catalog, row_key_identifiers_mapping)
+        row_set = composer.compose(table_catalog, identifiers_mapping)
         record_batch = scanner.scan(
             self.bigtable_client,
             table_catalog,

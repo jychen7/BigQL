@@ -1,4 +1,5 @@
-# simple row_key
+# 1. simple row_key
+## 1.1 equal
 - sql: select age from users
   parse_success:
     - "users"
@@ -23,7 +24,9 @@
   compose_success:
     - "abc"
 - sql: select age from users where "_row_key" = 1
-  parse_error: "selection (_row_key): only support string value"
+  parse_error: "selection (_row_key): row identifier only support string value"
+- sql: select age from users where "_row_key" = 'abc' and "_row_key" = 'def'
+  parse_error: "selection: _row_key is duplicated"
 - sql: select *, age from users where "_row_key" = 'abc'
   parse_success:
     - "users"
@@ -32,14 +35,58 @@
     - {"_row_key": ["abc"]}
   compose_success:
     - "abc"
+### 1.1.1 predicate on qualifiers
 - sql: select age from users where "_row_key" = 'abc' and gender = 'M'
   parse_success:
     - "users"
     - ["age"]
     - ["_row_key", "gender"]
-    - {"_row_key": ["abc"]}
+    - {"_row_key": ["abc"], "gender": ["M"]}
   compose_success:
     - "abc"
+- sql: select age from users where "_row_key" = 'abc' and age BETWEEN 1 and 10
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key", "age"]
+    - {"_row_key": ["abc"], "age": !!python/tuple [1, 10, true, true]}
+  compose_success:
+    - "abc"
+- sql: select age from users where "_row_key" = 'abc' and age >= 1
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key", "age"]
+    - {"_row_key": ["abc"], "age": !!python/tuple [1, null, true, false]}
+  compose_success:
+    - "abc"
+- sql: select age from users where "_row_key" = 'abc' and age <= 1
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key", "age"]
+    - {"_row_key": ["abc"], "age": !!python/tuple [null, 1, false, true]}
+  compose_success:
+    - "abc"
+- sql: select age from users where "_row_key" = 'abc' and age >= 1 and age <= 10
+  parse_error: "selection: age is duplicated"
+- sql: select age from users where "_row_key" = 'abc' and age < 1
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key", "age"]
+    - {"_row_key": ["abc"], "age": !!python/tuple [null, 1, false, false]}
+  compose_success:
+    - "abc"
+- sql: select age from users where "_row_key" = 'abc' and age > 1
+  parse_success:
+    - "users"
+    - ["age"]
+    - ["_row_key", "age"]
+    - {"_row_key": ["abc"], "age": !!python/tuple [1, null, false, false]}
+  compose_success:
+    - "abc"
+## 1.2 IN and BETWEEN
 - sql: select age from users where "_row_key" in ('abc', 'def')
   parse_success:
     - "users"
@@ -54,12 +101,12 @@
     - "users"
     - ["age"]
     - ["_row_key"]
-    - {"_row_key": !!python/tuple ["abc", "def"]}
+    - {"_row_key": !!python/tuple ["abc", "def", true, true]}
   compose_success:
-    - !!python/tuple ["abc", "def"]
+    - !!python/tuple ["abc", "def", true, true]
 - sql: select age from users where "_row_key" >= 'abc' and "_row_key" <= 'def'
   parse_error: "selection (_row_key): only InList, Between and BinaryOp are supported"
-# composite row_keys
+# 2. composite row_keys
 - sql: select pressure from balloons where "device_id" = '3698' and event_minute = '2021-03-05-1200'
   parse_success:
     - "balloons"
@@ -74,80 +121,80 @@
     - ["pressure"]
     - ["device_id", "event_minute"]
     - device_id: ["3698", "3700"]
-      event_minute: !!python/tuple ["2021-03-05-1200", "2021-03-05-1204"]
+      event_minute: !!python/tuple ["2021-03-05-1200", "2021-03-05-1204", true, true]
   compose_success:
-    - !!python/tuple ["3698#2021-03-05-1200", "3698#2021-03-05-1204"]
-    - !!python/tuple ["3700#2021-03-05-1200", "3700#2021-03-05-1204"]
+    - !!python/tuple ["3698#2021-03-05-1200", "3698#2021-03-05-1204", true, true]
+    - !!python/tuple ["3700#2021-03-05-1200", "3700#2021-03-05-1204", true, true]
 - sql: select pressure from balloons where "device_id" BETWEEN '3698' AND '3700' and event_minute = '2021-03-05-1200'
   parse_success:
     - "balloons"
     - ["pressure"]
     - ["device_id", "event_minute"]
-    - device_id: !!python/tuple ["3698", "3700"]
+    - device_id: !!python/tuple ["3698", "3700", true, true]
       event_minute: ["2021-03-05-1200"]
   compose_error: "row_key partition: prefix device_id only support '=' and 'IN'"
-# functions
+# 3. functions
 - sql: select avg(age) from users where "_row_key" between 'abc' and 'def'
   parse_success:
     - "users"
     - ["age"]
     - ["_row_key"]
-    - {"_row_key": !!python/tuple ["abc", "def"]}
+    - {"_row_key": !!python/tuple ["abc", "def", true, true]}
   compose_success:
-    - !!python/tuple ["abc", "def"]
+    - !!python/tuple ["abc", "def", true, true]
 - sql: select age as year from users where "_row_key" between 'abc' and 'def'
   parse_success:
     - "users"
     - ["age"]
     - ["_row_key"]
-    - {"_row_key": !!python/tuple ["abc", "def"]}
+    - {"_row_key": !!python/tuple ["abc", "def", true, true]}
   compose_success:
-    - !!python/tuple ["abc", "def"]
+    - !!python/tuple ["abc", "def", true, true]
 - sql: select avg(age) as avg_age from users where "_row_key" between 'abc' and 'def'
   parse_success:
     - "users"
     - ["age"]
     - ["_row_key"]
-    - {"_row_key": !!python/tuple ["abc", "def"]}
+    - {"_row_key": !!python/tuple ["abc", "def", true, true]}
   compose_success:
-    - !!python/tuple ["abc", "def"]
+    - !!python/tuple ["abc", "def", true, true]
 - sql: select age + 1 from users where "_row_key" between 'abc' and 'def'
   parse_success:
     - "users"
     - ["age"]
     - ["_row_key"]
-    - {"_row_key": !!python/tuple ["abc", "def"]}
+    - {"_row_key": !!python/tuple ["abc", "def", true, true]}
   compose_success:
-    - !!python/tuple ["abc", "def"]
+    - !!python/tuple ["abc", "def", true, true]
 - sql: select 1 + age from users where "_row_key" between 'abc' and 'def'
   parse_success:
     - "users"
     - ["age"]
     - ["_row_key"]
-    - {"_row_key": !!python/tuple ["abc", "def"]}
+    - {"_row_key": !!python/tuple ["abc", "def", true, true]}
   compose_success:
-    - !!python/tuple ["abc", "def"]
+    - !!python/tuple ["abc", "def", true, true]
 - sql: select age + 1 as age_plus from users where "_row_key" between 'abc' and 'def'
   parse_success:
     - "users"
     - ["age"]
     - ["_row_key"]
-    - {"_row_key": !!python/tuple ["abc", "def"]}
+    - {"_row_key": !!python/tuple ["abc", "def", true, true]}
   compose_success:
-    - !!python/tuple ["abc", "def"]
+    - !!python/tuple ["abc", "def", true, true]
 - sql: select cast(age as int) from users where "_row_key" between 'abc' and 'def'
   parse_success:
     - "users"
     - ["age"]
     - ["_row_key"]
-    - {"_row_key": !!python/tuple ["abc", "def"]}
+    - {"_row_key": !!python/tuple ["abc", "def", true, true]}
   compose_success:
-    - !!python/tuple ["abc", "def"]
+    - !!python/tuple ["abc", "def", true, true]
 - sql: select avg(cast(age as int)) as avg_age from users where "_row_key" between 'abc' and 'def'
   parse_success:
     - "users"
     - ["age"]
     - ["_row_key"]
-    - {"_row_key": !!python/tuple ["abc", "def"]}
+    - {"_row_key": !!python/tuple ["abc", "def", true, true]}
   compose_success:
-    - !!python/tuple ["abc", "def"]
+    - !!python/tuple ["abc", "def", true, true]

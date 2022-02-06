@@ -3,33 +3,49 @@ import os
 from google.auth.credentials import AnonymousCredentials
 from bigtableql.client import Client
 
-project_id = "my_project"
-instance_id = "my_instance"
-table_name = "weather_balloons"
-column_family_id = "measurements"
+PROJECT_ID = "my_project"
+INSTANCE_ID = "my_instance"
+TABLE_NAME = "weather_balloons"
+COLUMN_FAMILY_ID = "measurements"
 
 
 def test_read_after_write():
     os.environ["BIGTABLE_EMULATOR_HOST"] = "localhost:8086"
     # set admin=True to create table
-    client = Client(project=project_id, credentials=AnonymousCredentials(), admin=True)
+    client = Client(project=PROJECT_ID, credentials=AnonymousCredentials(), admin=True)
+    bigtable_table = client.bigtable_client.instance(INSTANCE_ID).table(TABLE_NAME)
 
-    bigtable_table = client.bigtable_client.instance(instance_id).table(table_name)
+    _prepare_table(bigtable_table)
+    _prepare_column_family(bigtable_table)
+    _registry_table_simple(client)
+
+    _test_write(client)
+    _test_read_simple(client)
+
+    _registry_table_composite(client)
+    _test_read_composite(client)
+
+
+def _prepare_table(bigtable_table):
     try:
         bigtable_table.create()
     except:
         pass
 
+
+def _prepare_column_family(bigtable_table):
     try:
-        bigtable_table.column_family(column_family_id).create()
+        bigtable_table.column_family(COLUMN_FAMILY_ID).create()
     except:
         pass
 
+
+def _registry_table_simple(client):
     client.register_table(
-        table_name,
-        instance_id=instance_id,
+        TABLE_NAME,
+        instance_id=INSTANCE_ID,
         column_families={
-            column_family_id: {
+            COLUMN_FAMILY_ID: {
                 "only_read_latest": True,
                 "columns": {
                     "pressure": int,
@@ -41,7 +57,28 @@ def test_read_after_write():
         },
     )
 
-    # write
+
+def _registry_table_composite(client):
+    client.register_table(
+        TABLE_NAME,
+        instance_id=INSTANCE_ID,
+        column_families={
+            COLUMN_FAMILY_ID: {
+                "only_read_latest": True,
+                "columns": {
+                    "pressure": int,
+                    "temperature": str,
+                    "humidity": int,
+                    "altitude": int,
+                },
+            }
+        },
+        row_key_identifiers=["location", "balloon_id", "event_minute"],
+        row_key_separator="#",
+    )
+
+
+def _test_write(client):
     responses = client.query(
         "measurements",
         """
@@ -55,7 +92,8 @@ def test_read_after_write():
     assert responses[0][0]
     assert responses[1][0]
 
-    # read via row_key
+
+def _test_read_simple(client):
     record_batchs = client.query(
         "measurements",
         """
@@ -66,24 +104,8 @@ def test_read_after_write():
     )
     assert record_batchs[0].to_pydict() == {"avg_pressure": [94340.0]}
 
-    # read via composite key
-    client.register_table(
-        table_name,
-        instance_id=instance_id,
-        column_families={
-            column_family_id: {
-                "only_read_latest": True,
-                "columns": {
-                    "pressure": int,
-                    "temperature": str,
-                    "humidity": int,
-                    "altitude": int,
-                },
-            }
-        },
-        row_key_identifiers=["location", "balloon_id", "event_minute"],
-        row_key_separator="#",
-    )
+
+def _test_read_composite(client):
     record_batchs = client.query(
         "measurements",
         """

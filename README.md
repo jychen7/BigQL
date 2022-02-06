@@ -118,7 +118,7 @@ However, as of 2022-01, it
 
 - ✅ Partition Pruning
 - ✅ Projection pushdown
-- [ ] Predicate push down (only [Value range](https://cloud.google.com/bigtable/docs/using-filters#value-range) is possible)
+- ✅ Predicate push down ([Value range](https://cloud.google.com/bigtable/docs/using-filters#value-range))
 - [ ] Limit Pushdown ???
 
 ## Limitation

@@ -41,12 +41,15 @@ class SelectQuery:
             table_name, table_catalog, self.column_family_id, qualifiers
         )
 
-        row_set = composer.compose(table_catalog, identifiers_mapping)
+        row_set, predicate_filters = composer.compose(
+            table_catalog, identifiers_mapping
+        )
         record_batch = scanner.scan(
             self.bigtable_client,
             table_catalog,
             self.column_family_id,
             row_set,
+            predicate_filters,
             qualifiers,
             non_qualifiers,
         )

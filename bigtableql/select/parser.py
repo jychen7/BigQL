@@ -120,7 +120,9 @@ def _parse_identifier_value(row_key_identifiers, identifier, expr):
     try:
         return int(number)
     except:
-        return float(number)
+        raise Exception(
+            f"selection ({identifier}): qualifier only support string and integer value"
+        )
 
 
 def _parse_identifier_mapping(row_key_identifiers, select_selection) -> dict:
@@ -167,13 +169,13 @@ def _parse_identifier_mapping(row_key_identifiers, select_selection) -> dict:
 
     value = _parse_identifier_value(row_key_identifiers, identifier, right)
     if op == GREATER_OR_EQUAL_OPERATOR:
-        return {identifier: (value, None, True, False)}
+        return {identifier: (value, None, True, None)}
     elif op == GREATER_THAN_OPERATOR:
-        return {identifier: (value, None, False, False)}
+        return {identifier: (value, None, False, None)}
     elif op == LESS_OR_EQUAL_OPERATOR:
-        return {identifier: (None, value, False, True)}
+        return {identifier: (None, value, None, True)}
     elif op == LESS_THAN_OPERATOR:
-        return {identifier: (None, value, False, False)}
+        return {identifier: (None, value, None, False)}
     else:
         raise Exception(f"selection ({identifier}): {op} not supported")
 

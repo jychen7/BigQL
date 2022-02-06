@@ -2,13 +2,14 @@ import pyarrow
 from google.cloud.bigtable.row_set import RowSet
 from google.cloud.bigtable.row_data import PartialRowData
 from google.cloud.bigtable.row_filters import (
+    RowFilter,
     RowFilterChain,
     FamilyNameRegexFilter,
     CellsColumnLimitFilter,
     ColumnQualifierRegexFilter,
-    ValueRangeFilter,
 )
 from bigtableql import RESERVED_TIMESTAMP
+from typing import List
 
 
 def scan(
@@ -16,6 +17,7 @@ def scan(
     table_catalog: dict,
     column_family_id: str,
     row_set: RowSet,
+    predicate_filters: List[RowFilter],
     qualifiers: set,
     non_qualifiers: set,
 ) -> pyarrow.RecordBatch:
@@ -30,7 +32,9 @@ def scan(
         table_name
     )
 
-    row_filter = RowFilterChain(_row_chain(column_family_id, column_family, qualifiers))
+    row_filter = RowFilterChain(
+        _row_chain(column_family_id, column_family, qualifiers, predicate_filters)
+    )
 
     columnar = {q: [] for q in qualifiers}
     columnar.update({q: [] for q in non_qualifiers})
@@ -80,7 +84,9 @@ def _int_qualifiers(qualifiers: set, columns_map: dict) -> set:
     }
 
 
-def _row_chain(column_family_id: str, column_family: dict, qualifiers: set):
+def _row_chain(
+    column_family_id: str, column_family: dict, qualifiers: set, predicate_filters
+):
     chain = [
         FamilyNameRegexFilter(column_family_id),
         # projection pushdown
@@ -88,10 +94,15 @@ def _row_chain(column_family_id: str, column_family: dict, qualifiers: set):
     ]
     if column_family.get("only_read_latest"):
         chain.append(CellsColumnLimitFilter(1))
+    # predicate pushdown
+    chain += predicate_filters
     return chain
 
 
 def _decode_cell_value(cell_value, is_int):
+    if cell_value is None:
+        return None
+
     if is_int:
         return int.from_bytes(cell_value, byteorder="big")
     return cell_value.decode()

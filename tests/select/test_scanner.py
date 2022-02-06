@@ -1,6 +1,7 @@
 from bigtableql.select import scanner
 import struct
 from google.cloud.bigtable.row_data import PartialRowData, Cell
+from google.cloud.bigtable.row_filters import RowFilter
 from datetime import datetime
 
 
@@ -141,8 +142,11 @@ def test_int_qualifiers():
 
 
 def test_row_chain():
-    assert len(scanner._row_chain("profile", {}, set())) == 2
-    assert len(scanner._row_chain("profile", {"only_read_latest": True}, set())) == 3
+    assert len(scanner._row_chain("profile", {}, set(), [])) == 2
+    assert (
+        len(scanner._row_chain("profile", {"only_read_latest": True}, set(), [])) == 3
+    )
+    assert len(scanner._row_chain("profile", {}, set(), [RowFilter()])) == 3
 
 
 def test_decode_cell_value_str():
@@ -152,3 +156,8 @@ def test_decode_cell_value_str():
 def test_decode_cell_value_int():
     a = 123
     assert scanner._decode_cell_value(struct.Struct(">q").pack(123), is_int=True) == a
+
+
+def test_decode_cell_value_none():
+    assert scanner._decode_cell_value(None, is_int=False) == None
+    assert scanner._decode_cell_value(None, is_int=True) == None

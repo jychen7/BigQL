@@ -44,6 +44,8 @@
     - {"_row_key": ["abc"], "gender": ["M"]}
   compose_success:
     - "abc"
+  compose_predicates:
+    - !!python/tuple ["M", "M", true, true]
 - sql: select age from users where "_row_key" = 'abc' and age BETWEEN 1 and 10
   parse_success:
     - "users"
@@ -52,22 +54,31 @@
     - {"_row_key": ["abc"], "age": !!python/tuple [1, 10, true, true]}
   compose_success:
     - "abc"
+  compose_predicates:
+    - !!python/tuple [1, 10, true, true]
 - sql: select age from users where "_row_key" = 'abc' and age >= 1
   parse_success:
     - "users"
     - ["age"]
     - ["_row_key", "age"]
-    - {"_row_key": ["abc"], "age": !!python/tuple [1, null, true, false]}
+    - {"_row_key": ["abc"], "age": !!python/tuple [1, null, true, null]}
   compose_success:
     - "abc"
+  compose_predicates:
+    # if end_value is None, python bigtable SDK requires inclusive_end is None in input
+    # however, python bigtable SDK transform inclusive_end from None to True in output
+    # https://github.com/googleapis/python-bigtable/blob/b02ec9c6d4a0ade1a6228da9107580831707a391/google/cloud/bigtable/row_filters.py#L526-L531
+    - !!python/tuple [1, null, true, true]
 - sql: select age from users where "_row_key" = 'abc' and age <= 1
   parse_success:
     - "users"
     - ["age"]
     - ["_row_key", "age"]
-    - {"_row_key": ["abc"], "age": !!python/tuple [null, 1, false, true]}
+    - {"_row_key": ["abc"], "age": !!python/tuple [null, 1, null, true]}
   compose_success:
     - "abc"
+  compose_predicates:
+    - !!python/tuple [null, 1, true, true]
 - sql: select age from users where "_row_key" = 'abc' and age >= 1 and age <= 10
   parse_error: "selection: age is duplicated"
 - sql: select age from users where "_row_key" = 'abc' and age < 1
@@ -75,17 +86,23 @@
     - "users"
     - ["age"]
     - ["_row_key", "age"]
-    - {"_row_key": ["abc"], "age": !!python/tuple [null, 1, false, false]}
+    - {"_row_key": ["abc"], "age": !!python/tuple [null, 1, null, false]}
   compose_success:
     - "abc"
+  compose_predicates:
+    - !!python/tuple [null, 1, true, false]
 - sql: select age from users where "_row_key" = 'abc' and age > 1
   parse_success:
     - "users"
     - ["age"]
     - ["_row_key", "age"]
-    - {"_row_key": ["abc"], "age": !!python/tuple [1, null, false, false]}
+    - {"_row_key": ["abc"], "age": !!python/tuple [1, null, false, null]}
   compose_success:
     - "abc"
+  compose_predicates:
+    - !!python/tuple [1, null, false, true]
+- sql: select age from users where "_row_key" = 'abc' and age >= 1.1
+  parse_error: "selection (age): qualifier only support string and integer value"
 ## 1.2 IN and BETWEEN
 - sql: select age from users where "_row_key" in ('abc', 'def')
   parse_success:

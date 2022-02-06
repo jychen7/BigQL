@@ -1,4 +1,4 @@
-from bigtableql.select import composer
+from bigtableql.select import composer, scanner
 import yaml
 import pytest
 
@@ -14,9 +14,10 @@ def test_composer(catalog):
                     composer.compose(catalog[table_name], row_key_identifiers_mapping)
                 assert str(e.value) == test["compose_error"]
             else:
-                row_set = composer.compose(
+                row_set, predicate_filters = composer.compose(
                     catalog[table_name], row_key_identifiers_mapping
                 )
+
                 output = test["compose_success"]
                 if isinstance(output[0], tuple):
                     assert [
@@ -30,3 +31,18 @@ def test_composer(catalog):
                     ] == output
                 else:
                     assert row_set.row_keys == output
+
+                if "compose_predicates" not in test:
+                    assert predicate_filters == []
+                else:
+                    first_predicate = test["compose_predicates"][0]
+                    is_int = isinstance(first_predicate[0] or first_predicate[1], int)
+                    assert [
+                        (
+                            scanner._decode_cell_value(f.start_value, is_int),
+                            scanner._decode_cell_value(f.end_value, is_int),
+                            f.inclusive_start,
+                            f.inclusive_end,
+                        )
+                        for f in predicate_filters
+                    ] == test["compose_predicates"]

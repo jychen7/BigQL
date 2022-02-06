@@ -19,5 +19,5 @@ fmt-check:
 emulator:
 	docker run --rm -d gcr.io/google.com/cloudsdktool/cloud-sdk gcloud beta emulators bigtable start --host-port=0.0.0.0:8086
 
-e2e_test:
+e2e:
 	poetry run pytest e2e_tests

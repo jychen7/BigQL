@@ -10,6 +10,10 @@ BigtableQL provides a SQL query layer to run aggregation query on Bigtable.
 
 ## Quick Start
 
+```
+pip install bigtableql
+```
+
 Using the [weather balloon example data](https://cloud.google.com/bigtable/docs/schema-design-time-series#example-data) shown in [Single-timestamp unserialized](https://cloud.google.com/bigtable/docs/schema-design-time-series#unserialized) schema design
 
 ```

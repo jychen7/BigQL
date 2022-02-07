@@ -25,8 +25,7 @@ us-west2#3698#2021-03-05-1203   96025       9.5         66          598
 us-west2#3698#2021-03-05-1204   96021       9.6         63          624
 ```
 
-we are able to calculate average pressure of the period by
-
+After initialize the client
 ```
 from bigtableql.client import Client
 # config follows offical python bigtable client
@@ -47,7 +46,11 @@ client.register_table(
         }
     }
 )
+```
 
+we are able to calculate average pressure of the period by
+
+```
 client.query("measurements", """
 SELECT avg(pressure) FROM weather_balloons
 WHERE
@@ -59,19 +62,7 @@ Or with row key decomposition
 
 ```
 client.register_table(
-    "weather_balloons",
-    instance_id="INSTANCE_ID",
-    column_families={
-        "measurements": {
-            "only_read_latest": True,
-            "columns": {
-                "pressure": int,
-                "temperature": str,
-                "humidity": int,
-                "altitude": int
-            }
-        }
-    },
+    xxx,
     row_key_identifiers=["location", "balloon_id", "event_minute"],
     row_key_separator="#"
 )

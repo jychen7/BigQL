@@ -94,6 +94,45 @@ def test_process_row_simple_key_multiple_qualifiers_multiple_cells():
     assert columnar["gender"] == ["M", "M"]
 
 
+# | row_key | _timestamp | age  | gender |
+# | ------- | ---------- | ---- | ------ |
+# | abc     | 1641013200 | 20   | NULL   |
+# | abc     | 1641013100 | NULL | M      |
+def test_process_row_simple_key_multiple_qualifiers_sparse_cells():
+    columnar = {"_row_key": [], "_timestamp": [], "age": [], "gender": []}
+    row_data = PartialRowData(b"abc")
+    row_data._cells["profile"] = {}
+    row_data._cells["profile"][b"age"] = [
+        Cell(struct.Struct(">q").pack(20), 1641013200000000),
+    ]
+    row_data._cells["profile"][b"gender"] = [
+        Cell(b"M", 1641013100000000),
+    ]
+    scanner._process_row(
+        columnar,
+        row_data,
+        ["_row_key"],
+        "#",
+        "profile",
+        set(["age", "gender"]),
+        set(["age"]),
+    )
+    assert columnar["_row_key"] == ["abc", "abc"]
+    if columnar["_timestamp"] == [
+        1641013200.0,
+        1641013100.0,
+    ]:
+        assert columnar["age"] == [20, None]
+        assert columnar["gender"] == [None, "M"]
+    else:
+        assert columnar["_timestamp"] == [
+            1641013100.0,
+            1641013200.0,
+        ]
+        assert columnar["age"] == [None, 20]
+        assert columnar["gender"] == ["M", None]
+
+
 def test_process_row_composite_key():
     columnar = {
         "device_id": [],

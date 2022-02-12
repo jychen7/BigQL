@@ -67,15 +67,23 @@ def _process_row(
         row_key_values = [row_data.row_key.decode()]
     else:
         row_key_values = row_data.row_key.decode().split(row_key_separator)
-    for i, qualifier in enumerate(qualifiers):
+
+    by_timestamp = {}
+    for qualifier in qualifiers:
         for cell in row_data.cells[column_family_id][qualifier.encode()]:
-            columnar[qualifier].append(
-                _decode_cell_value(cell.value, qualifier in int_qualifiers)
+            cell_timestamp = cell.timestamp.timestamp()
+            if cell_timestamp not in by_timestamp:
+                by_timestamp[cell_timestamp] = {}
+            by_timestamp[cell_timestamp][qualifier] = _decode_cell_value(
+                cell.value, qualifier in int_qualifiers
             )
-            if i == 0:
-                for j, composite_row_key in enumerate(row_key_identifiers):
-                    columnar[composite_row_key].append(row_key_values[j])
-                columnar[RESERVED_TIMESTAMP].append(cell.timestamp.timestamp())
+
+    for ts, ts_qualifiers in by_timestamp.items():
+        for qualifier in qualifiers:
+            columnar[qualifier].append(ts_qualifiers.get(qualifier, None))
+        for i, composite_row_key in enumerate(row_key_identifiers):
+            columnar[composite_row_key].append(row_key_values[i])
+        columnar[RESERVED_TIMESTAMP].append(ts)
 
 
 def _int_qualifiers(qualifiers: set, columns_map: dict) -> set:

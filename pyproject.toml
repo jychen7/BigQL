@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "BigtableQL"
-version = "0.1.8"
+version = "0.1.9"
 description = "Query Layer for Google Cloud Bigtable"
 authors = ["jychen7 <jychen7@users.noreply.github.com>"]
 license = "MIT"

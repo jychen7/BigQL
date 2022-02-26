@@ -1,7 +1,7 @@
 import functools
 from typing import Tuple
-from bigtableql import SELECT_STAR
-from bigtableql.select import validator
+from bigql import SELECT_STAR
+from bigql.select import validator
 
 BINARY_OPERATION = "BinaryOp"
 FUNCTION_OPERATION = "Function"

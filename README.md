@@ -1,17 +1,17 @@
-# BigtableQL
+# BigQL
 
-BigtableQL provides a SQL Query Layer for [Google Cloud Bigtable](https://cloud.google.com/bigtable/docs).
+BigQL provides a SQL Query Layer for [Google Cloud Bigtable](https://cloud.google.com/bigtable/docs).
 
 ## Use Cases
 
 Cloud Bigtable is Google's fully managed NoSQL Big Data database service. Each table contains rows and columns. Each row/column intersection can contain multiple cells. Each cell contains a unique timestamped version of the data for that row and column. Thus Bigtable is often used to store time series data.
 
-BigtableQL provides a SQL query layer to run aggregation query on Bigtable.
+BigQL provides a SQL query layer to run aggregation query on Bigtable.
 
 ## Quick Start
 
 ```
-pip install bigtableql
+pip install bigql
 ```
 
 Using the [weather balloon example data](https://cloud.google.com/bigtable/docs/schema-design-time-series#example-data) shown in [Single-timestamp unserialized](https://cloud.google.com/bigtable/docs/schema-design-time-series#unserialized) schema design
@@ -27,7 +27,7 @@ us-west2#3698#2021-03-05-1204   96021       9.6         63          624
 
 After initialize the client
 ```
-from bigtableql.client import Client
+from bigql.client import Client
 # config follows offical python bigtable client
 client = Client(config)
 
@@ -133,7 +133,7 @@ However, as of 2022-01, it
 
 ## Technical Details
 
-BigtableQL depends on
+BigQL depends on
 - [sqloxide](https://github.com/wseaton/sqloxide) and [sqlparser-rs](https://github.com/sqlparser-rs/sqlparser-rs): SQL parser
 - [python-bigtable](https://github.com/googleapis/python-bigtable): offical python bigtable client
 - [datafusion-python](https://github.com/datafusion-contrib/datafusion-python): in memory query engine

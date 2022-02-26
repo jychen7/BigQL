@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "BigtableQL"
+name = "BigQL"
 version = "0.1.9"
 description = "Query Layer for Google Cloud Bigtable"
 authors = ["jychen7 <jychen7@users.noreply.github.com>"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/jychen7/BigtableQL"
-repository = "https://github.com/jychen7/BigtableQL"
+homepage = "https://github.com/jychen7/BigQL"
+repository = "https://github.com/jychen7/BigQL"
 keywords = ["arrow", "bigtable", "datafusion", "sql"]
 classifiers = [
     "Topic :: Software Development :: Build Tools",

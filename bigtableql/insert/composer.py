@@ -1,7 +1,7 @@
 from google.cloud.bigtable.row import DirectRow
 from typing import List
 import struct, itertools
-from bigtableql.select import scanner
+from bigql.select import scanner
 
 
 def compose(table_catalog, column_family_id, keys, values_batch) -> List[DirectRow]:

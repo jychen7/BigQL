@@ -1,8 +1,8 @@
 from google.cloud import bigtable
 import sqloxide
-from bigtableql.select import SelectQuery
-from bigtableql.insert import InsertQuery
-from bigtableql import (
+from bigql.select import SelectQuery
+from bigql.insert import InsertQuery
+from bigql import (
     RESERVED_ROWKEY,
     DEFAULT_SEPARATOR,
 )

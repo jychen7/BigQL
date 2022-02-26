@@ -1,7 +1,7 @@
 import os
 
 from google.auth.credentials import AnonymousCredentials
-from bigtableql.client import Client
+from bigql.client import Client
 
 PROJECT_ID = "my_project"
 INSTANCE_ID = "my_instance"

@@ -1,5 +1,5 @@
-from bigtableql import RESERVED_TIMESTAMP, SELECT_STAR
-from bigtableql.select import parser, validator, composer, scanner, executor
+from bigql import RESERVED_TIMESTAMP, SELECT_STAR
+from bigql.select import parser, validator, composer, scanner, executor
 from typing import List
 import pyarrow
 

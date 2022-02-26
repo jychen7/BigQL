@@ -8,7 +8,7 @@ from google.cloud.bigtable.row_filters import (
     CellsColumnLimitFilter,
     ColumnQualifierRegexFilter,
 )
-from bigtableql import RESERVED_TIMESTAMP
+from bigql import RESERVED_TIMESTAMP
 from typing import List
 
 

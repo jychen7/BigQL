@@ -1,4 +1,4 @@
-from bigtableql.select import parser
+from bigql.select import parser
 import pytest
 import sqloxide
 import yaml

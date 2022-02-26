@@ -1,4 +1,4 @@
-from bigtableql.select import scanner
+from bigql.select import scanner
 import struct
 from google.cloud.bigtable.row_data import PartialRowData, Cell
 from google.cloud.bigtable.row_filters import RowFilter

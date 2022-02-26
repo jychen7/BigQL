@@ -1,7 +1,7 @@
 import pytest
 from google.auth.credentials import AnonymousCredentials
-from bigtableql.client import Client
-from bigtableql.select import SelectQuery
+from bigql.client import Client
+from bigql.select import SelectQuery
 
 
 @pytest.fixture

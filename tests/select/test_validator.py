@@ -1,4 +1,4 @@
-from bigtableql.select import validator
+from bigql.select import validator
 import pytest
 
 

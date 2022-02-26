@@ -1,4 +1,4 @@
-from bigtableql.insert import composer
+from bigql.insert import composer
 
 
 def test_compose_simple_row_key(catalog):

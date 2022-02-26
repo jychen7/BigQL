@@ -1,5 +1,5 @@
-from bigtableql.select import validator as select_validator
-from bigtableql.insert import parser, validator, composer, writer
+from bigql.select import validator as select_validator
+from bigql.insert import parser, validator, composer, writer
 from typing import List, Tuple
 from google.rpc.status_pb2 import Status
 

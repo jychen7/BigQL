@@ -1,4 +1,4 @@
-from bigtableql.select import composer, scanner
+from bigql.select import composer, scanner
 import yaml
 import pytest
 

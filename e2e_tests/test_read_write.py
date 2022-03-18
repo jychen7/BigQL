@@ -3,8 +3,8 @@ import os
 from google.auth.credentials import AnonymousCredentials
 from bigql.client import Client
 
-PROJECT_ID = "my_project"
-INSTANCE_ID = "my_instance"
+PROJECT_ID = "emulator"
+INSTANCE_ID = "dev"
 TABLE_NAME = "weather_balloons"
 COLUMN_FAMILY_ID = "measurements"
 
@@ -128,6 +128,17 @@ def _test_read_simple_predicate(client):
         WHERE
         "_row_key" BETWEEN 'us-west2#3698#2021-03-05-1200' AND 'us-west2#3698#2021-03-05-1204'
         AND "pressure" >= 94558
+    """,
+    )
+    assert record_batchs[0].to_pydict() == {"avg_pressure": [94558.0]}
+
+    record_batchs = client.query(
+        "measurements",
+        """
+        SELECT avg(pressure) as avg_pressure FROM weather_balloons
+        WHERE
+        "_row_key" BETWEEN 'us-west2#3698#2021-03-05-1200' AND 'us-west2#3698#2021-03-05-1204'
+        AND "temperature" = '76'
     """,
     )
     assert record_batchs[0].to_pydict() == {"avg_pressure": [94558.0]}

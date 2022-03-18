@@ -121,7 +121,8 @@ However, as of 2022-01, it
 
 - ✅ Partition Pruning
 - ✅ Projection pushdown
-- ✅ Predicate push down ([Value range](https://cloud.google.com/bigtable/docs/using-filters#value-range))
+- ❌ Predicate push down ([Value range](https://cloud.google.com/bigtable/docs/using-filters#value-range) and [Value regex](https://cloud.google.com/bigtable/docs/using-filters#value-regex))
+    + not work well, because its filter works on all cells, not only predicate column
 - [ ] Limit Pushdown ???
 
 ## Limitation

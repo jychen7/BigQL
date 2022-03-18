@@ -88,16 +88,15 @@ def _compose_predicate_filters(row_key_identifiers, identifiers_mapping):
                 inclusive_end=inclusive_end,
             )
             predicate_filters.append(f)
-        else:
-            # list
-            for v in value:
-                f = ValueRangeFilter(
-                    start_value=_encode_cell_value(v),
-                    end_value=_encode_cell_value(v),
-                    inclusive_start=True,
-                    inclusive_end=True,
-                )
-                predicate_filters.append(f)
+        elif len(value) == 1:
+            v = value[0]
+            f = ValueRangeFilter(
+                start_value=_encode_cell_value(v),
+                end_value=_encode_cell_value(v),
+                inclusive_start=True,
+                inclusive_end=True,
+            )
+            predicate_filters.append(f)
 
     return predicate_filters
 

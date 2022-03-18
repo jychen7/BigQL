@@ -185,7 +185,7 @@ def test_row_chain():
     assert (
         len(scanner._row_chain("profile", {"only_read_latest": True}, set(), [])) == 3
     )
-    assert len(scanner._row_chain("profile", {}, set(), [RowFilter()])) == 3
+    assert len(scanner._row_chain("profile", {}, set(), [RowFilter()])) == 2
 
 
 def test_decode_cell_value_str():

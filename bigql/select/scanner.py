@@ -102,8 +102,8 @@ def _row_chain(
     ]
     if column_family.get("only_read_latest"):
         chain.append(CellsColumnLimitFilter(1))
-    # predicate pushdown
-    chain += predicate_filters
+    # predicate pushdown not allow filter on one qualifier, it works on all qualifiers' cells
+    # chain += predicate_filters
     return chain
 
 

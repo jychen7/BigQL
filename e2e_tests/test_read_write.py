@@ -105,7 +105,7 @@ def _test_read_empty(client):
     """,
     )
     assert len(record_batchs) == 1
-    assert record_batchs[0].num_rows == 0
+    assert record_batchs[0].to_pydict() == {"avg_pressure": [None]}
 
 
 def _test_read_simple(client):

@@ -50,7 +50,20 @@ def scan(
             int_qualifiers,
         )
 
-    record_batch = pyarrow.RecordBatch.from_pydict(columnar)
+    schema = pyarrow.schema(
+        [
+            (
+                k,
+                pyarrow.int64()
+                if k in int_qualifiers
+                else (
+                    pyarrow.float64() if k == RESERVED_TIMESTAMP else pyarrow.string()
+                ),
+            )
+            for k in columnar.keys()
+        ]
+    )
+    record_batch = pyarrow.RecordBatch.from_pydict(columnar, schema=schema)
     return record_batch
 
 
